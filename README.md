@@ -293,6 +293,10 @@ docker run --rm --network host -v "$PWD:/zap/wrk" ghcr.io/zaproxy/zaproxy:stable
 
 ## Deployment
 
+**Step-by-step guide for Render (free tier): [DEPLOY.md](DEPLOY.md).** The root `Dockerfile` builds a
+single image where FastAPI serves the API and the built React app from one origin, and
+[`render.yaml`](render.yaml) creates that service plus a private PostgreSQL database.
+
 ### HTTPS and reverse proxy
 
 Put a TLS terminator (Caddy, Traefik, a cloud load balancer, or nginx with certificates) in front of the `frontend` container:

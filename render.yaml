@@ -1,0 +1,41 @@
+# Render Blueprint: one web service (API + React app) and one PostgreSQL database.
+# Deploy: Render Dashboard -> New -> Blueprint -> select this repository. See DEPLOY.md.
+
+services:
+  - type: web
+    name: securesphere
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health/ready
+    autoDeploy: true
+    envVars:
+      - key: SS_ENVIRONMENT
+        value: production
+      - key: SS_DATABASE_URL
+        fromDatabase:
+          name: securesphere-db
+          property: connectionString
+      - key: SS_SECRET_KEY
+        generateValue: true
+      # "none" until you add an SMTP provider (see DEPLOY.md, step 6).
+      - key: SS_MAIL_BACKEND
+        value: none
+      - key: WEB_CONCURRENCY
+        value: "1"
+      # Entered in the Render dashboard during setup; never committed.
+      - key: SS_BOOTSTRAP_ADMIN_EMAIL
+        sync: false
+      - key: SS_BOOTSTRAP_ADMIN_NAME
+        sync: false
+      - key: SS_BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: securesphere-db
+    plan: free
+    databaseName: securesphere
+    user: securesphere
+    # No external connections: only services inside Render can reach the database.
+    ipAllowList: []

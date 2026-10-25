@@ -11,6 +11,7 @@ from app.middleware import (
     RequestContextMiddleware,
     SecurityHeadersMiddleware,
 )
+from app.spa import mount_spa
 
 
 def create_app() -> FastAPI:
@@ -34,6 +35,8 @@ def create_app() -> FastAPI:
     api.include_router(admin.router)
     api.include_router(lab.router)
     app.include_router(api)
+    if settings.static_dir:
+        mount_spa(app, settings.static_dir)
 
     register_error_handlers(app)
 

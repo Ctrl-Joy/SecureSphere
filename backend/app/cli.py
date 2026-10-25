@@ -1,6 +1,7 @@
 """Operational commands.
 
     python -m app.cli create-admin --email admin@example.com --name "Ada Admin"
+    python -m app.cli bootstrap-admin      # first deploy: admin from SS_BOOTSTRAP_ADMIN_* vars
     python -m app.cli seed-demo            # development only, events flagged is_sample
     python -m app.cli cleanup              # retention: purge expired sessions/tokens/old events
 
@@ -67,6 +68,50 @@ def create_admin(email: str, name: str) -> int:
         )
         db.commit()
     print(f"Administrator ready: {email}")
+    return 0
+
+
+def bootstrap_admin() -> int:
+    """Creates the first administrator from environment variables on hosts without a shell.
+
+    Idempotent and non-destructive: if the account already exists it is left untouched, so
+    the variables can stay set across redeploys (remove the password variable once done).
+    Problems are reported but never stop the server from starting.
+    """
+    email = os.environ.get("SS_BOOTSTRAP_ADMIN_EMAIL", "").strip()
+    password = os.environ.get("SS_BOOTSTRAP_ADMIN_PASSWORD", "")
+    name = os.environ.get("SS_BOOTSTRAP_ADMIN_NAME", "").strip() or "Administrator"
+    if not email or not password:
+        print("bootstrap-admin: SS_BOOTSTRAP_ADMIN_EMAIL/PASSWORD not set, skipping.")
+        return 0
+    try:
+        validate_email(email, check_deliverability=False)
+    except EmailNotValidError as exc:
+        print(f"bootstrap-admin: invalid email ({exc}), skipping.", file=sys.stderr)
+        return 0
+    email = normalize_email(email)
+    with SessionLocal() as db:
+        if db.scalar(select(User.id).where(User.email == email)) is not None:
+            print("bootstrap-admin: account already exists, leaving it unchanged.")
+            return 0
+    problems = password_problems(password, email=email, name=name)
+    if problems:
+        print("bootstrap-admin: password rejected: " + " ".join(problems), file=sys.stderr)
+        return 0
+    with SessionLocal() as db:
+        user = User(email=email, name=name, role=Role.ADMIN, password_hash=hash_password(password))
+        db.add(user)
+        db.flush()
+        db.add(
+            AuditEvent(
+                event_type="cli.admin.create",
+                severity=Severity.HIGH,
+                target_user_id=user.id,
+                details={"source": "bootstrap"},
+            )
+        )
+        db.commit()
+    print(f"bootstrap-admin: administrator created: {email}")
     return 0
 
 
@@ -148,11 +193,14 @@ def main(argv: list[str] | None = None) -> int:
     admin.add_argument("--name", default="Administrator")
     demo = sub.add_parser("seed-demo", help="insert labelled sample audit events (dev only)")
     demo.add_argument("--count", type=int, default=120)
+    sub.add_parser("bootstrap-admin", help="create the first admin from SS_BOOTSTRAP_ADMIN_* vars")
     sub.add_parser("cleanup", help="apply retention policies")
     args = parser.parse_args(argv)
 
     if args.command == "create-admin":
         return create_admin(args.email, args.name)
+    if args.command == "bootstrap-admin":
+        return bootstrap_admin()
     if args.command == "seed-demo":
         return seed_demo(args.count)
     return cleanup()

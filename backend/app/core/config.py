@@ -58,8 +58,9 @@ class Settings(BaseSettings):
     audit_retention_days: int = Field(default=180, ge=1)
     session_retention_days: int = Field(default=30, ge=1)
 
-    # Email delivery: "outbox" writes messages to files (development only), "smtp" sends.
-    mail_backend: Literal["outbox", "smtp"] = "outbox"
+    # Email delivery: "outbox" writes messages to files (development only), "smtp" sends,
+    # "none" disables email (password-reset requests are accepted but nothing is sent).
+    mail_backend: Literal["outbox", "smtp", "none"] = "outbox"
     mail_outbox_dir: str = f"{_VAR}/dev_mail"
     mail_from: str = "SecureSphere <no-reply@securesphere.local>"
     smtp_host: str = "localhost"
@@ -67,6 +68,20 @@ class Settings(BaseSettings):
     smtp_username: str | None = None
     smtp_password: SecretStr | None = None
     smtp_starttls: bool = True
+
+    # Built frontend (Vite dist/) to serve from the API process; unset in development,
+    # where Vite serves the frontend itself.
+    static_dir: str | None = None
+
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _normalize_database_url(cls, value: str) -> str:
+        # Hosting providers (e.g. Render) hand out postgres:// or postgresql:// URLs;
+        # SQLAlchemy needs the driver named explicitly.
+        for prefix in ("postgres://", "postgresql://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg://" + value.removeprefix(prefix)
+        return value
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -92,7 +107,7 @@ class Settings(BaseSettings):
         if "*" in self.cors_origins:
             problems.append("SS_CORS_ORIGINS cannot contain '*'")
         if self.mail_backend == "outbox":
-            problems.append("SS_MAIL_BACKEND=outbox is development-only; configure smtp")
+            problems.append("SS_MAIL_BACKEND=outbox is development-only; use smtp or none")
         if problems:
             raise ValueError("; ".join(problems))
         return self

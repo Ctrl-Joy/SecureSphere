@@ -15,6 +15,12 @@ log = logging.getLogger("securesphere.http")
 _REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9-]{8,64}$")
 
 API_CSP = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+# The served React app (single-service deployments). Matches frontend/nginx.conf.
+SPA_CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; "
+    "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+)
 # Swagger UI (development only) loads its assets from jsDelivr.
 DOCS_CSP = (
     "default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
@@ -126,13 +132,16 @@ class SecurityHeadersMiddleware:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
-        is_docs = scope["path"].startswith(("/api/docs", "/api/redoc"))
+        path = scope["path"]
+        is_docs = path.startswith(("/api/docs", "/api/redoc"))
+        is_api = path == "/api" or path.startswith("/api/")
+        csp = DOCS_CSP if is_docs else API_CSP if is_api else SPA_CSP
 
         async def send_wrapper(message: Message) -> None:
             if message["type"] == "http.response.start":
                 headers = message.setdefault("headers", [])
                 extra = {
-                    b"content-security-policy": (DOCS_CSP if is_docs else API_CSP).encode(),
+                    b"content-security-policy": csp.encode(),
                     b"x-content-type-options": b"nosniff",
                     b"x-frame-options": b"DENY",
                     b"referrer-policy": b"no-referrer",
@@ -140,7 +149,8 @@ class SecurityHeadersMiddleware:
                     b"cross-origin-opener-policy": b"same-origin",
                     b"cross-origin-resource-policy": b"same-origin",
                 }
-                if not is_docs:
+                if is_api and not is_docs:
+                    # API responses carry personal data; static files set their own policy.
                     extra[b"cache-control"] = b"no-store"
                 if self.hsts:
                     extra[b"strict-transport-security"] = b"max-age=31536000; includeSubDomains"

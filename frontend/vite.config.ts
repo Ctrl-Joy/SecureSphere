@@ -17,7 +17,11 @@ export default defineConfig({
     // Same-origin API in development, mirroring the nginx reverse proxy in production.
     proxy: { '/api': { target: apiTarget, changeOrigin: false } },
   },
-  build: { sourcemap: false },
+  build: {
+    sourcemap: false,
+    // Emit fonts as files instead of data: URLs so the CSP can keep font-src 'self'.
+    assetsInlineLimit: (file) => (/\.(woff2?|ttf|otf)$/.test(file) ? false : undefined),
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

@@ -20,6 +20,11 @@ def send(to: str, subject: str, body: str) -> None:
     msg["Subject"] = subject
     msg.set_content(body)
 
+    if settings.mail_backend == "none":
+        # Never log the message body: it may contain a password-reset link.
+        log.warning("mail_disabled", extra={"data": {"subject": subject}})
+        return
+
     if settings.mail_backend == "outbox":
         outbox = Path(settings.mail_outbox_dir)
         outbox.mkdir(parents=True, exist_ok=True)
