@@ -1,0 +1,88 @@
+# Local full-stack environment running the production configuration:
+# PostgreSQL, one-shot migrations, the API, nginx + SPA, and Mailpit as a fake SMTP server.
+#
+#   cp .env.example .env   # then set real random values
+#   docker compose up --build
+#   open http://localhost:8080   (Mailpit inbox: http://localhost:8025)
+
+x-backend-env: &backend-env
+  SS_ENVIRONMENT: production
+  SS_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+  SS_SECRET_KEY: ${SS_SECRET_KEY:?set SS_SECRET_KEY in .env}
+  SS_FRONTEND_URL: ${SS_FRONTEND_URL:-http://localhost:8080}
+  SS_CORS_ORIGINS: ${SS_FRONTEND_URL:-http://localhost:8080}
+  SS_MAIL_BACKEND: smtp
+  SS_SMTP_HOST: mailpit
+  SS_SMTP_PORT: "1025"
+  SS_SMTP_STARTTLS: "false"
+  SS_LOG_LEVEL: INFO
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-securesphere}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [internal]
+    restart: unless-stopped
+
+  migrate:
+    build: ./backend
+    command: ["alembic", "upgrade", "head"]
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+
+  backend:
+    build: ./backend
+    environment:
+      <<: *backend-env
+      # Only nginx can reach the API (it is not published), so any peer on this network is the proxy.
+      FORWARDED_ALLOW_IPS: "*"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [internal]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [internal]
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
+    networks: [internal]
+
+volumes:
+  pgdata:
+
+networks:
+  internal:

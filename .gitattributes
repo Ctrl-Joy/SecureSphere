@@ -1,0 +1,4 @@
+# Keep LF everywhere so Docker builds and shell commands behave the same on every OS.
+* text=auto eol=lf
+*.png binary
+*.jpg binary

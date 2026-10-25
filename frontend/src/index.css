@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* Design tokens. Dark is the primary theme (matches the brand reference). */
+:root,
+[data-theme='dark'] {
+  --bg: #050505;
+  --surface: #0b0b0c;
+  --surface-2: #121214;
+  --surface-3: #1a1a1d;
+  --border: #232327;
+  --border-strong: #34343a;
+  --text: #f5f5f4;
+  --muted: #a3a3a8;
+  --subtle: #6e6e76;
+  --accent: #e3261c;
+  --accent-hover: #f23a2f;
+  --accent-fg: #ffffff;
+  --accent-soft: rgb(227 38 28 / 0.12);
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --info: #60a5fa;
+  --focus: #ff5a4f;
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f4f4f3;
+  --surface-3: #eaeae8;
+  --border: #e2e2df;
+  --border-strong: #cfcfcb;
+  --text: #0c0c0d;
+  --muted: #55555c;
+  --subtle: #7a7a82;
+  --accent: #c8180f;
+  --accent-hover: #a9140c;
+  --accent-fg: #ffffff;
+  --accent-soft: rgb(200 24 15 / 0.08);
+  --ok: #15803d;
+  --warn: #b45309;
+  --info: #1d4ed8;
+  --focus: #c8180f;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  * {
+    border-color: var(--border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
