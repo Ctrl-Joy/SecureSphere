@@ -48,7 +48,25 @@ Further documents: [Threat model](docs/THREAT_MODEL.md) · [Security policy](SEC
 
 ---
 
-## Quick start (local, no Docker)
+## Run it (Windows, one click)
+
+1. Install the two prerequisites once (skip any you already have):
+   ```bash
+   winget install --id astral-sh.uv -e
+   ```
+   ```bash
+   winget install --id OpenJS.NodeJS.LTS -e
+   ```
+2. Double-click **`start.bat`** in the project folder.
+
+The first run installs Python 3.12 and every dependency, creates the database, and asks you
+to choose your **administrator email and password**. Your browser then opens
+**http://localhost:5180**. Later runs start in a few seconds. Both servers log to that one
+window; press **Ctrl+C** or close the window to stop them.
+
+Options: `start.bat -SetupOnly` (prepare without launching) and `start.bat -NoBrowser`.
+
+## Quick start (local, manual)
 
 Prerequisites: [uv](https://docs.astral.sh/uv/) (installs Python 3.12 for you) and Node.js 20+.
 
@@ -67,7 +85,7 @@ uv run uvicorn app.main:app --reload --port 8000
 # 2. Frontend (second terminal)
 cd frontend
 npm ci
-npm run dev                               # http://localhost:5173, proxies /api to :8000
+npm run dev                               # http://localhost:5180, proxies /api to :8000
 ```
 
 - **API docs (development only):** http://localhost:8000/api/docs
@@ -219,7 +237,7 @@ Backend settings are environment variables with the `SS_` prefix (or `backend/.e
 | `SS_ENVIRONMENT` | `development` | `production` enables HSTS, Secure `__Host-` cookies, disables docs, enforces invariants |
 | `SS_DATABASE_URL` | SQLite in `backend/var/` | must be `postgresql+psycopg://…` in production |
 | `SS_SECRET_KEY` | dev placeholder | ≥ 32 random chars in production; rotating it invalidates all sessions and reset links |
-| `SS_FRONTEND_URL` / `SS_CORS_ORIGINS` | `http://localhost:5173` | reset-link base / comma-separated allowlist |
+| `SS_FRONTEND_URL` / `SS_CORS_ORIGINS` | `http://localhost:5180` | reset-link base / comma-separated allowlist |
 | `SS_SESSION_IDLE_MINUTES` / `SS_SESSION_ABSOLUTE_HOURS` | 30 / 12 | session lifetime |
 | `SS_LOGIN_MAX_FAILURES` / `SS_LOCKOUT_MINUTES` | 5 / 15 | account lockout |
 | `SS_MAX_REQUEST_BYTES` | 65536 | request body limit |

@@ -12,7 +12,8 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   server: {
-    port: 5173,
+    port: 5180,
+    strictPort: true,
     // Same-origin API in development, mirroring the nginx reverse proxy in production.
     proxy: { '/api': { target: apiTarget, changeOrigin: false } },
   },

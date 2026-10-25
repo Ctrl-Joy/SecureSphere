@@ -32,9 +32,9 @@ class Settings(BaseSettings):
     # Used as an HMAC key for hashing session/reset tokens and deriving CSRF tokens.
     secret_key: SecretStr = SecretStr("dev-insecure-secret-key-change-me-please")
 
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "http://localhost:5180"
     cors_origins: Annotated[list[str], NoDecode] = Field(
-        default_factory=lambda: ["http://localhost:5173"]
+        default_factory=lambda: ["http://localhost:5180"]
     )
 
     # Sessions
