@@ -18,7 +18,7 @@ export function Logo({ className, withWordmark = true }: { className?: string; w
     <span className={cn('inline-flex items-center gap-2.5 text-fg', className)}>
       <LogoMark />
       {withWordmark ? (
-        <span className="text-[15px] font-semibold tracking-tight">SecureSphere</span>
+        <span className="logo-wordmark text-[15px] font-semibold tracking-tight">SecureSphere</span>
       ) : (
         <span className="sr-only">SecureSphere</span>
       )}
