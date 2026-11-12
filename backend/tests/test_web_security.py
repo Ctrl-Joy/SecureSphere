@@ -133,6 +133,14 @@ def test_health_endpoints(client: ApiClient) -> None:
     assert client.get("/api/v1/health/ready").json() == {"status": "ok"}
 
 
+def test_features_reports_whether_reset_email_can_be_sent(client: ApiClient, monkeypatch) -> None:
+    from app.core.config import get_settings
+
+    assert client.get("/api/v1/health/features").json() == {"password_reset_email": True}
+    monkeypatch.setattr(get_settings(), "mail_backend", "none")
+    assert client.get("/api/v1/health/features").json() == {"password_reset_email": False}
+
+
 def test_redaction_hides_secrets_but_keeps_counts() -> None:
     from app.core.logging import redact
 

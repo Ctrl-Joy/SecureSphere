@@ -1,17 +1,5 @@
-import * as DialogPrimitive from '@radix-ui/react-dialog'
-import {
-  Activity,
-  FlaskConical,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Moon,
-  Settings,
-  Sun,
-  Users,
-  X,
-  type LucideIcon,
-} from 'lucide-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { Activity, FlaskConical, LayoutDashboard, LogOut, Moon, Settings, Sun, Users, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -22,56 +10,23 @@ import { useAuth } from '@/lib/auth'
 import { useTheme } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
-type Item = { to: string; label: string; icon: LucideIcon }
+type Item = { to: string; label: string; short: string; icon: LucideIcon }
 
 const MAIN: Item[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/lab', label: 'Security lab', icon: FlaskConical },
-  { to: '/settings', label: 'Account settings', icon: Settings },
+  { to: '/dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard },
+  { to: '/lab', label: 'Security lab', short: 'Lab', icon: FlaskConical },
+  { to: '/settings', label: 'Account', short: 'Account', icon: Settings },
 ]
 const ADMIN: Item[] = [
-  { to: '/admin/users', label: 'User management', icon: Users },
-  { to: '/admin/monitoring', label: 'Security monitoring', icon: Activity },
+  { to: '/admin/users', label: 'Users', short: 'Users', icon: Users },
+  { to: '/admin/monitoring', label: 'Audit log', short: 'Audit', icon: Activity },
 ]
 
-function NavItems({ onNavigate }: { onNavigate?: () => void }) {
-  const { user } = useAuth()
-  const link = ({ isActive }: { isActive: boolean }) =>
-    cn(
-      'flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors',
-      isActive ? 'border-accent bg-surface-2 text-fg' : 'border-transparent text-muted hover:bg-surface-2 hover:text-fg',
-    )
-  const render = (items: Item[]) =>
-    items.map((i) => (
-      <NavLink key={i.to} to={i.to} className={link} onClick={onNavigate}>
-        <i.icon className="size-4" aria-hidden />
-        {i.label}
-      </NavLink>
-    ))
-  return (
-    <nav aria-label="Application" className="flex flex-col gap-6">
-      <div className="flex flex-col gap-0.5">
-        <p className="mb-2 px-3 font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Workspace</p>
-        {render(MAIN)}
-      </div>
-      {user?.role === 'admin' ? (
-        <div className="flex flex-col gap-0.5">
-          <p className="mb-2 px-3 font-mono text-[11px] uppercase tracking-[0.18em] text-subtle">Administration</p>
-          {render(ADMIN)}
-        </div>
-      ) : null}
-    </nav>
-  )
-}
-
-function UserPanel() {
-  const { user, logout } = useAuth()
-  const { theme, toggle } = useTheme()
+function useSignOut() {
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
-  if (!user) return null
-
-  const onLogout = async () => {
+  const signOut = async () => {
     setBusy(true)
     try {
       await logout()
@@ -83,25 +38,65 @@ function UserPanel() {
       setBusy(false)
     }
   }
+  return { signOut, busy }
+}
 
+function Avatar({ name }: { name: string }) {
+  return (
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border-strong bg-surface-2 text-sm font-medium uppercase text-fg">
+      {name.trim().charAt(0) || '?'}
+    </span>
+  )
+}
+
+function SideNav() {
+  const { user } = useAuth()
+  const link = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      'flex h-10 items-center gap-3 rounded-md px-3 text-sm transition-colors',
+      isActive ? 'bg-surface-3 font-medium text-fg' : 'text-muted hover:bg-surface-2 hover:text-fg',
+    )
+  const render = (items: Item[]) =>
+    items.map((i) => (
+      <NavLink key={i.to} to={i.to} className={link}>
+        <i.icon className="size-4" aria-hidden />
+        {i.label}
+      </NavLink>
+    ))
+  return (
+    <nav aria-label="Application" className="flex flex-col gap-1">
+      {render(MAIN)}
+      {user?.role === 'admin' ? (
+        <>
+          <p className="mb-1 mt-5 px-3 text-xs text-subtle">Administration</p>
+          {render(ADMIN)}
+        </>
+      ) : null}
+    </nav>
+  )
+}
+
+function SidebarUser() {
+  const { user } = useAuth()
+  const { theme, toggle } = useTheme()
+  const { signOut, busy } = useSignOut()
+  if (!user) return null
   return (
     <div className="border-t border-border pt-4">
       <div className="flex items-center gap-3 px-1">
-        <div className="flex size-9 shrink-0 items-center justify-center border border-border-strong bg-surface-2 font-mono text-sm uppercase">
-          {user.name.trim().charAt(0) || '?'}
-        </div>
+        <Avatar name={user.name} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm text-fg">{user.name}</p>
-          <p className="truncate font-mono text-[11px] text-subtle">{user.email}</p>
+          <p className="truncate text-xs text-subtle">{user.email}</p>
         </div>
-        <Badge tone={user.role === 'admin' ? 'accent' : 'neutral'}>{user.role}</Badge>
+        {user.role === 'admin' ? <Badge tone="accent">Admin</Badge> : null}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Button variant="ghost" size="sm" onClick={toggle} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
           {theme === 'dark' ? <Sun /> : <Moon />}
           {theme === 'dark' ? 'Light' : 'Dark'}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onLogout} loading={busy}>
+        <Button variant="ghost" size="sm" onClick={signOut} loading={busy}>
           {!busy ? <LogOut /> : null}
           Sign out
         </Button>
@@ -110,56 +105,102 @@ function UserPanel() {
   )
 }
 
-export function AppShell() {
-  const [open, setOpen] = useState(false)
+/** Phone header: account menu with theme and sign-out, reachable with one thumb at the top right. */
+function AccountMenu() {
+  const { user } = useAuth()
+  const { theme, toggle } = useTheme()
+  const { signOut } = useSignOut()
+  if (!user) return null
+  const item = 'flex h-11 w-full cursor-pointer items-center gap-3 rounded-md px-3 text-sm text-fg outline-none data-[highlighted]:bg-surface-2'
   return (
-    <div className="min-h-dvh bg-bg lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button aria-label="Account menu" className="flex size-11 items-center justify-center rounded-full">
+          <Avatar name={user.name} />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          sideOffset={6}
+          className="z-50 w-64 rounded-lg border border-border-strong bg-surface p-1.5 shadow-2xl"
+        >
+          <div className="px-3 py-2">
+            <p className="truncate text-sm font-medium text-fg">{user.name}</p>
+            <p className="truncate text-xs text-subtle">{user.email}</p>
+          </div>
+          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Item className={item} onSelect={toggle}>
+            {theme === 'dark' ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
+            {theme === 'dark' ? 'Light theme' : 'Dark theme'}
+          </DropdownMenu.Item>
+          <DropdownMenu.Item className={item} onSelect={signOut}>
+            <LogOut className="size-4" aria-hidden />
+            Sign out
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  )
+}
+
+function TabBar() {
+  const { user } = useAuth()
+  const items = user?.role === 'admin' ? [...MAIN, ...ADMIN] : MAIN
+  return (
+    <nav
+      aria-label="Application"
+      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+    >
+      {items.map((i) => (
+        <NavLink
+          key={i.to}
+          to={i.to}
+          className={({ isActive }) =>
+            cn(
+              'flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px]',
+              isActive ? 'font-medium text-fg' : 'text-subtle',
+            )
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <span className={cn('flex h-7 w-12 items-center justify-center rounded-full', isActive && 'bg-surface-3')}>
+                <i.icon className="size-[18px]" aria-hidden />
+              </span>
+              {i.short}
+            </>
+          )}
+        </NavLink>
+      ))}
+    </nav>
+  )
+}
+
+export function AppShell() {
+  return (
+    <div className="min-h-dvh bg-bg lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-dvh flex-col border-r border-border bg-surface px-3 py-5 lg:flex">
-        <Link to="/" className="mb-8 px-2" aria-label="SecureSphere home">
+        <Link to="/dashboard" className="mb-7 px-2" aria-label="SecureSphere dashboard">
           <Logo />
         </Link>
-        <NavItems />
+        <SideNav />
         <div className="mt-auto">
-          <UserPanel />
+          <SidebarUser />
         </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/95 px-4 backdrop-blur lg:hidden">
-        <Link to="/dashboard" aria-label="Dashboard">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg px-4 lg:hidden">
+        <Link to="/dashboard" className="flex h-11 items-center" aria-label="SecureSphere dashboard">
           <Logo />
         </Link>
-        <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
-          <DialogPrimitive.Trigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Open navigation">
-              <Menu />
-            </Button>
-          </DialogPrimitive.Trigger>
-          <DialogPrimitive.Portal>
-            <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/70" />
-            <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 flex w-[min(300px,85vw)] flex-col border-r border-border-strong bg-surface px-3 py-5">
-              <div className="mb-8 flex items-center justify-between px-2">
-                <DialogPrimitive.Title asChild>
-                  <span>
-                    <Logo />
-                  </span>
-                </DialogPrimitive.Title>
-                <DialogPrimitive.Description className="sr-only">Application navigation</DialogPrimitive.Description>
-                <DialogPrimitive.Close aria-label="Close navigation" className="text-muted hover:text-fg">
-                  <X className="size-5" />
-                </DialogPrimitive.Close>
-              </div>
-              <NavItems onNavigate={() => setOpen(false)} />
-              <div className="mt-auto">
-                <UserPanel />
-              </div>
-            </DialogPrimitive.Content>
-          </DialogPrimitive.Portal>
-        </DialogPrimitive.Root>
+        <AccountMenu />
       </header>
 
-      <main className="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-8 lg:py-10">
+      <main className="mx-auto w-full max-w-[1120px] px-4 pb-28 pt-6 sm:px-8 lg:py-10">
         <Outlet />
       </main>
+      <TabBar />
     </div>
   )
 }

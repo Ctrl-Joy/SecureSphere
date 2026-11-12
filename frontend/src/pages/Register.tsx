@@ -77,12 +77,12 @@ export function RegisterPage() {
   return (
     <AuthLayout
       eyebrow="Create account"
-      title="Secure your workspace"
+      title="Create your account"
       description="Create an account to access the dashboard and security lab."
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/login" className="text-fg underline underline-offset-4 hover:text-accent">
+          <Link to="/login" className="inline-flex min-h-11 items-center text-fg underline underline-offset-4 hover:text-accent">
             Sign in
           </Link>
         </>
@@ -107,10 +107,10 @@ export function RegisterPage() {
           {(p) => <PasswordInput {...p} autoComplete="new-password" {...form.register('confirm')} />}
         </Field>
         <div className="space-y-1.5">
-          <label className="flex items-start gap-2.5 text-sm text-muted">
+          <label className="flex min-h-11 items-start gap-3 text-sm text-muted">
             <input
               type="checkbox"
-              className="mt-0.5 size-4 accent-[var(--accent)]"
+              className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
               aria-invalid={Boolean(errors.accept_terms)}
               {...form.register('accept_terms')}
             />
@@ -119,7 +119,7 @@ export function RegisterPage() {
             </span>
           </label>
           {errors.accept_terms ? (
-            <p role="alert" className="text-xs text-accent">
+            <p role="alert" className="text-sm text-danger md:text-xs">
               {errors.accept_terms.message}
             </p>
           ) : null}

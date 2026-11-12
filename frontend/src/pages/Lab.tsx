@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { Check, Play, ShieldAlert, ShieldCheck, X } from 'lucide-react'
+import { Check, Play, X } from 'lucide-react'
 import { useId, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { FormAlert, Input } from '@/components/ui/form'
@@ -23,11 +23,11 @@ export function LabPage() {
     <>
       <PageHeader
         eyebrow="Security lab"
-        title="Vulnerable vs. secure patterns"
-        description="Each demo runs against the real API. Vulnerable code is only shown as text and is never executed; the SQL demo uses an isolated in-memory database of fictional products."
+        title="Attack and defence, side by side"
+        description="Five lessons that send real requests to this API. Vulnerable code is shown as text only and is never executed."
       />
-      <div role="tablist" aria-label="Lab exercises" className="mb-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border">
-        {TABS.map((t) => (
+      <div role="tablist" aria-label="Lessons" className="mb-6 flex flex-wrap gap-2">
+        {TABS.map((t, i) => (
           <button
             key={t.id}
             role="tab"
@@ -36,10 +36,13 @@ export function LabPage() {
             aria-controls={`${baseId}-${t.id}-panel`}
             onClick={() => setTab(t.id)}
             className={cn(
-              '-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm transition-colors',
-              tab === t.id ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg',
+              'flex h-11 items-center gap-2 rounded-full border px-4 text-sm transition-colors md:h-9',
+              tab === t.id
+                ? 'border-fg bg-fg font-medium text-bg'
+                : 'border-border-strong text-muted hover:border-subtle hover:text-fg',
             )}
           >
+            <span className="tabular-nums opacity-60">{i + 1}</span>
             {t.label}
           </button>
         ))}
@@ -55,44 +58,77 @@ export function LabPage() {
   )
 }
 
-function Explainer({ risk, fix, owasp }: { risk: ReactNode; fix: ReactNode; owasp: string }) {
+function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
-    <div className="grid gap-px border border-border bg-border md:grid-cols-2">
-      <div className="bg-surface p-5">
-        <p className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-accent">
-          <ShieldAlert className="size-4" aria-hidden />
-          The risk
-        </p>
-        <div className="mt-2 text-sm leading-relaxed text-muted">{risk}</div>
-      </div>
-      <div className="bg-surface p-5">
-        <p className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-ok">
-          <ShieldCheck className="size-4" aria-hidden />
-          The secure implementation
-        </p>
-        <div className="mt-2 text-sm leading-relaxed text-muted">{fix}</div>
-        <p className="mt-3 font-mono text-[11px] text-subtle">OWASP Top 10: {owasp}</p>
-      </div>
-    </div>
+    <section className="grid gap-3 px-4 py-5 sm:px-5 md:grid-cols-[190px_minmax(0,1fr)] md:gap-6">
+      <h2 className="flex items-center gap-2.5 self-start text-sm font-medium text-fg">
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border-strong text-xs tabular-nums text-muted">
+          {n}
+        </span>
+        {title}
+      </h2>
+      <div className="min-w-0 space-y-4">{children}</div>
+    </section>
+  )
+}
+
+/** Every lesson reads the same way: what this shows, try it, what happened, how it is defended. */
+function Lesson({
+  owasp,
+  shows,
+  tryIt,
+  result,
+  defence,
+}: {
+  owasp: string
+  shows: ReactNode
+  tryIt: ReactNode
+  result: ReactNode
+  defence: ReactNode
+}) {
+  return (
+    <Card className="divide-y divide-border">
+      <Step n={1} title="What this shows">
+        <div className="text-sm leading-relaxed text-muted">{shows}</div>
+        <Badge className="normal-case">OWASP {owasp}</Badge>
+      </Step>
+      <Step n={2} title="Try it">
+        {tryIt}
+      </Step>
+      <Step n={3} title="What happened">
+        {result ?? <p className="text-sm text-subtle">Run the example above to see the result here.</p>}
+      </Step>
+      <Step n={4} title="How it is defended">
+        <div className="text-sm leading-relaxed text-muted">{defence}</div>
+      </Step>
+    </Card>
   )
 }
 
 function Code({ tone, label, children }: { tone: 'bad' | 'good' | 'neutral'; label: string; children: ReactNode }) {
   return (
-    <div className={cn('border', tone === 'bad' ? 'border-accent/40' : tone === 'good' ? 'border-ok/40' : 'border-border')}>
+    <div
+      className={cn(
+        'overflow-hidden rounded-md border',
+        tone === 'bad' ? 'border-danger/40' : tone === 'good' ? 'border-ok/40' : 'border-border',
+      )}
+    >
       <p
         className={cn(
-          'flex items-center gap-1.5 border-b px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider',
-          tone === 'bad' ? 'border-accent/40 text-accent' : tone === 'good' ? 'border-ok/40 text-ok' : 'border-border text-subtle',
+          'flex items-center gap-1.5 border-b px-3 py-2 text-xs font-medium',
+          tone === 'bad' ? 'border-danger/40 text-danger' : tone === 'good' ? 'border-ok/40 text-ok' : 'border-border text-muted',
         )}
       >
-        {tone === 'bad' ? <X className="size-3" aria-hidden /> : tone === 'good' ? <Check className="size-3" aria-hidden /> : null}
+        {tone === 'bad' ? <X className="size-3.5" aria-hidden /> : tone === 'good' ? <Check className="size-3.5" aria-hidden /> : null}
         {label}
       </p>
       <pre className="overflow-x-auto whitespace-pre-wrap break-all bg-bg p-3 font-mono text-xs leading-relaxed text-fg">{children}</pre>
     </div>
   )
 }
+
+const chip =
+  'min-h-11 min-w-11 max-w-full truncate rounded-md border border-border-strong px-3 font-mono text-xs text-muted hover:border-subtle hover:text-fg md:min-h-8 md:min-w-0'
 
 function RunForm({
   label,
@@ -119,18 +155,27 @@ function RunForm({
         onRun(value)
       }}
     >
-      <label htmlFor={id} className="block font-mono text-xs uppercase tracking-wider text-muted">
+      <label htmlFor={id} className="block text-sm font-medium text-fg">
         {label}
       </label>
-      <div className="flex gap-2">
-        <Input id={id} value={value} onChange={(e) => setValue(e.target.value)} maxLength={maxLength} className="font-mono" />
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          id={id}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          maxLength={maxLength}
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          className="font-mono"
+        />
         <Button type="submit" loading={pending} className="shrink-0">
           {!pending ? <Play /> : null}
           Run
         </Button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-subtle">Try:</span>
+        <span className="text-xs text-subtle">Examples</span>
         {presets.map((p) => (
           <button
             key={p}
@@ -139,7 +184,7 @@ function RunForm({
               setValue(p)
               onRun(p)
             }}
-            className="border border-border-strong px-2 py-1 font-mono text-[11px] text-muted hover:border-accent hover:text-fg"
+            className={chip}
           >
             {p}
           </button>
@@ -168,71 +213,70 @@ interface SqlResult {
 function SqlInjectionLab() {
   const m = useMutation({ mutationFn: (input: string) => post<SqlResult>('/lab/sql-injection', { input }) })
   return (
-    <div className="space-y-6">
-      <Explainer
-        owasp="A03 Injection"
-        risk={
+    <Lesson
+      owasp="A03 Injection"
+      shows={
+        <>
+          Building SQL by joining strings lets input rewrite the query. <code className="font-mono text-fg">' OR 1=1 --</code>{' '}
+          turns a product search into "return every row", hidden ones included.
+        </>
+      }
+      tryIt={
+        <>
+          <RunForm
+            label="Product search term"
+            defaultValue="USB"
+            presets={["' OR 1=1 --", "x' UNION SELECT name FROM users --", '%', 'key']}
+            onRun={(v) => m.mutate(v)}
+            pending={m.isPending}
+          />
+          {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
+        </>
+      }
+      result={
+        m.data ? (
           <>
-            Building SQL by concatenating user input lets an attacker change the query itself. The payload{' '}
-            <code className="font-mono text-fg">' OR 1=1 --</code> turns a product search into "return every row",
-            including hidden ones.
-          </>
-        }
-        fix={
-          <>
-            Send the query and the data separately (bound parameters). The database treats input purely as a value.
-            SecureSphere uses SQLAlchemy, which parameterises every query, and escapes <code className="font-mono text-fg">%</code>{' '}
-            and <code className="font-mono text-fg">_</code> in LIKE searches.
-          </>
-        }
-      />
-      <Card className="space-y-5 p-5">
-        <RunForm
-          label="Product search term"
-          defaultValue="USB"
-          presets={["' OR 1=1 --", "x' UNION SELECT name FROM users --", '%', 'key']}
-          onRun={(v) => m.mutate(v)}
-          pending={m.isPending}
-        />
-        {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
-        {m.data ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+              {m.data.injection_patterns_detected ? <Badge tone="danger" className="normal-case">Injection syntax</Badge> : <Badge className="normal-case">Plain input</Badge>}
+              <span className="min-w-0">{m.data.vulnerable_explanation}</span>
+            </div>
+            <div className="grid gap-4 xl:grid-cols-2">
               <Code tone="bad" label="Vulnerable: string concatenation (not executed)">
                 {m.data.vulnerable_query}
               </Code>
-              <p className="flex items-start gap-2 text-xs text-muted">
-                {m.data.injection_patterns_detected ? <Badge tone="accent">Injection syntax</Badge> : <Badge>Plain input</Badge>}
-                <span>{m.data.vulnerable_explanation}</span>
-              </p>
-            </div>
-            <div className="space-y-3">
               <Code tone="good" label="Secure: parameterised query (executed)">
                 {m.data.safe_query}
                 {'\n\n'}params = {JSON.stringify(m.data.safe_parameters)}
               </Code>
-              <div className="border border-border">
-                <p className="border-b border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-subtle">
-                  Results: {m.data.safe_results.length} row(s), hidden rows never returned
-                </p>
-                {m.data.safe_results.length ? (
-                  <ul className="divide-y divide-border">
-                    {m.data.safe_results.map((r) => (
-                      <li key={r.id} className="flex justify-between px-3 py-2 text-sm">
-                        <span>{r.name}</span>
-                        <span className="font-mono text-xs text-subtle">{r.category}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="px-3 py-3 text-sm text-muted">No products match. The payload was treated as literal text.</p>
-                )}
-              </div>
             </div>
-          </div>
-        ) : null}
-      </Card>
-    </div>
+            <div className="overflow-hidden rounded-md border border-border">
+              <p className="border-b border-border px-3 py-2 text-xs font-medium text-muted">
+                {m.data.safe_results.length} row(s) returned. Hidden rows are never included.
+              </p>
+              {m.data.safe_results.length ? (
+                <ul className="divide-y divide-border">
+                  {m.data.safe_results.map((r) => (
+                    <li key={r.id} className="flex justify-between gap-3 px-3 py-2 text-sm">
+                      <span className="min-w-0 truncate">{r.name}</span>
+                      <span className="shrink-0 text-xs text-subtle">{r.category}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="px-3 py-3 text-sm text-muted">No products match. The payload was treated as literal text.</p>
+              )}
+            </div>
+          </>
+        ) : null
+      }
+      defence={
+        <>
+          The query and the data travel separately (bound parameters), so input is only ever a value. SQLAlchemy
+          parameterises every query here, and <code className="font-mono text-fg">%</code> and{' '}
+          <code className="font-mono text-fg">_</code> are escaped in LIKE searches.
+        </>
+      }
+    />
   )
 }
 
@@ -246,50 +290,54 @@ interface XssResult {
 function XssLab() {
   const m = useMutation({ mutationFn: (input: string) => post<XssResult>('/lab/xss', { input }) })
   return (
-    <div className="space-y-6">
-      <Explainer
-        owasp="A03 Injection (XSS)"
-        risk={
+    <Lesson
+      owasp="A03 Injection (XSS)"
+      shows={
+        <>
+          If user text is inserted into a page as HTML (for example with <code className="font-mono text-fg">innerHTML</code>),
+          a script inside it runs as the victim and can act on their behalf.
+        </>
+      }
+      tryIt={
+        <>
+          <RunForm
+            label="Comment text"
+            defaultValue="<img src=x onerror=alert(document.cookie)>"
+            presets={['<script>alert(1)</script>', '<a href="javascript:alert(1)">click</a>', 'Hello & welcome']}
+            onRun={(v) => m.mutate(v)}
+            pending={m.isPending}
+          />
+          {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
+        </>
+      }
+      result={
+        m.data ? (
           <>
-            If user-controlled text is inserted into a page as HTML (for example with <code className="font-mono text-fg">innerHTML</code>),
-            a script inside it runs with the victim's privileges and can act on their behalf.
-          </>
-        }
-        fix={
-          <>
-            Encode output for its context. React escapes text by default and SecureSphere never uses{' '}
-            <code className="font-mono text-fg">dangerouslySetInnerHTML</code>. A strict Content-Security-Policy blocks inline
-            scripts as a second layer, and session cookies are HttpOnly so script cannot read them.
-          </>
-        }
-      />
-      <Card className="space-y-5 p-5">
-        <RunForm
-          label="Comment text"
-          defaultValue="<img src=x onerror=alert(document.cookie)>"
-          presets={['<script>alert(1)</script>', '<a href="javascript:alert(1)">click</a>', 'Hello & welcome']}
-          onRun={(v) => m.mutate(v)}
-          pending={m.isPending}
-        />
-        {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
-        {m.data ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Code tone="bad" label="Vulnerable: element.innerHTML = input (not executed)">
-              {`comment.innerHTML = ${JSON.stringify(m.data.raw)}`}
-            </Code>
-            <Code tone="good" label="Secure: HTML-encoded output">
-              {m.data.html_encoded}
-            </Code>
-            <div className="border border-border p-4 lg:col-span-2">
-              <p className="font-mono text-[11px] uppercase tracking-wider text-subtle">Rendered safely by React</p>
+            <div className="grid gap-4 xl:grid-cols-2">
+              <Code tone="bad" label="Vulnerable: innerHTML = input (not executed)">
+                {`comment.innerHTML = ${JSON.stringify(m.data.raw)}`}
+              </Code>
+              <Code tone="good" label="Secure: HTML-encoded output">
+                {m.data.html_encoded}
+              </Code>
+            </div>
+            <div className="rounded-md border border-border p-3">
+              <p className="text-xs font-medium text-muted">Rendered safely by React</p>
               {/* Rendered as a text node: markup is displayed, never interpreted. */}
               <p className="mt-2 break-all text-sm text-fg">{m.data.raw}</p>
               <p className="mt-3 text-xs text-muted">{m.data.explanation}</p>
             </div>
-          </div>
-        ) : null}
-      </Card>
-    </div>
+          </>
+        ) : null
+      }
+      defence={
+        <>
+          Output is encoded for its context. React escapes text by default and this app never uses{' '}
+          <code className="font-mono text-fg">dangerouslySetInnerHTML</code>. A strict Content-Security-Policy blocks
+          inline scripts as a second layer, and the session cookie is HttpOnly so script cannot read it.
+        </>
+      }
+    />
   )
 }
 
@@ -305,55 +353,57 @@ interface HashResult {
 function HashingLab() {
   const m = useMutation({ mutationFn: (sample: string) => post<HashResult>('/lab/password-hashing', { sample }) })
   return (
-    <div className="space-y-6">
-      <Explainer
-        owasp="A02 Cryptographic Failures"
-        risk={
-          <>
-            Fast, unsalted hashes such as SHA-256 produce the same output for the same password, so leaked hashes can be
-            cracked with precomputed tables and billions of guesses per second on a GPU.
-          </>
-        }
-        fix={
-          <>
-            Argon2id is deliberately slow and memory-hard, and embeds a random salt, so identical passwords produce
-            different hashes. Parameters are stored in the hash, allowing transparent upgrades on next sign-in.
-          </>
-        }
-      />
-      <FormAlert tone="info">Use a made-up sample. Never enter a real password into a demo.</FormAlert>
-      <Card className="space-y-5 p-5">
-        <RunForm
-          label="Sample password (demo only)"
-          defaultValue="correct horse battery staple"
-          presets={['password123', 'Tr0ub4dor&3']}
-          onRun={(v) => v && m.mutate(v)}
-          pending={m.isPending}
-          maxLength={64}
-        />
-        {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
-        {m.data ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-3">
-              <Code tone="bad" label={`SHA-256, unsalted · ${m.data.sha256_us} µs`}>
+    <Lesson
+      owasp="A02 Cryptographic Failures"
+      shows={
+        <>
+          Fast, unsalted hashes such as SHA-256 give the same output for the same password, so leaked hashes fall to
+          precomputed tables and billions of guesses per second.
+        </>
+      }
+      tryIt={
+        <>
+          <FormAlert tone="info">Use a made-up sample. Never type a real password into a demo.</FormAlert>
+          <RunForm
+            label="Sample password (demo only)"
+            defaultValue="correct horse battery staple"
+            presets={['password123', 'Tr0ub4dor&3']}
+            onRun={(v) => v && m.mutate(v)}
+            pending={m.isPending}
+            maxLength={64}
+          />
+          {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
+        </>
+      }
+      result={
+        m.data ? (
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div className="space-y-2">
+              <Code tone="bad" label={`SHA-256, unsalted, ${m.data.sha256_us} µs`}>
                 {m.data.weak_sha256}
                 {'\n'}
                 {m.data.weak_sha256_again}
               </Code>
-              <p className="text-xs text-muted">Hashed twice: identical output. One cracked hash cracks every user with that password.</p>
+              <p className="text-xs text-muted">Hashed twice: identical. One cracked hash cracks every user with that password.</p>
             </div>
-            <div className="space-y-3">
-              <Code tone="good" label={`Argon2id · ${m.data.argon2_ms} ms`}>
+            <div className="space-y-2">
+              <Code tone="good" label={`Argon2id, ${m.data.argon2_ms} ms`}>
                 {m.data.argon2id}
                 {'\n'}
                 {m.data.argon2id_again}
               </Code>
-              <p className="text-xs text-muted">Hashed twice: different salts, different output, and each guess costs real time and memory.</p>
+              <p className="text-xs text-muted">Hashed twice: different salts, different output, and every guess costs time and memory.</p>
             </div>
           </div>
-        ) : null}
-      </Card>
-    </div>
+        ) : null
+      }
+      defence={
+        <>
+          Argon2id is deliberately slow and memory-hard, and embeds a random salt. Its parameters are stored in the
+          hash, so they can be upgraded transparently at the next sign-in.
+        </>
+      }
+    />
   )
 }
 
@@ -385,79 +435,84 @@ function ValidationLab() {
     }
   }
   return (
-    <div className="space-y-6">
-      <Explainer
-        owasp="A04 Insecure Design · A08 Integrity"
-        risk={
-          <>
-            Client-side validation is a convenience: attackers send requests directly. Accepting unknown fields lets them
-            set properties they should not control (for example <code className="font-mono text-fg">is_admin</code>).
-          </>
-        }
-        fix={
-          <>
-            Every request is validated on the server against a strict Pydantic schema: types are not coerced, unknown
-            fields are rejected, and strings are length-limited. Validation errors never echo the submitted values.
-          </>
-        }
-      />
-      <Card className="space-y-4 p-5">
-        <label htmlFor={id} className="block font-mono text-xs uppercase tracking-wider text-muted">
-          Request body: sign-up form schema (username, email, age, plan)
-        </label>
-        <textarea
-          id={id}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={8}
-          maxLength={2000}
-          spellCheck={false}
-          className="w-full border border-border-strong bg-bg p-3 font-mono text-xs text-fg focus-visible:border-accent focus-visible:outline-none"
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={() => run()} loading={m.isPending}>
-            {!m.isPending ? <Play /> : null}
-            Validate on server
-          </Button>
-          {Object.entries(VALIDATION_PRESETS).map(([name, body]) => (
-            <button
-              key={name}
-              type="button"
-              onClick={() => {
-                setText(body)
-                run(body)
-              }}
-              className="border border-border-strong px-2 py-1 font-mono text-[11px] text-muted hover:border-accent hover:text-fg"
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-        {parseError ? <FormAlert>{parseError}</FormAlert> : null}
-        {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
-        {m.data ? (
+    <Lesson
+      owasp="A04 Insecure Design, A08 Integrity"
+      shows={
+        <>
+          Client-side validation is a convenience: attackers call the API directly. Accepting unknown fields lets them
+          set properties they should not control, such as <code className="font-mono text-fg">is_admin</code>.
+        </>
+      }
+      tryIt={
+        <>
+          <label htmlFor={id} className="block text-sm font-medium text-fg">
+            Sign-up request body (username, email, age, plan)
+          </label>
+          <textarea
+            id={id}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={8}
+            maxLength={2000}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            className="w-full rounded-md border border-border-strong bg-bg p-3 font-mono text-base text-fg focus-visible:border-accent focus-visible:outline-none md:text-xs"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={() => run()} loading={m.isPending} className="max-sm:w-full">
+              {!m.isPending ? <Play /> : null}
+              Validate on server
+            </Button>
+            <span className="text-xs text-subtle">Examples</span>
+            {Object.entries(VALIDATION_PRESETS).map(([name, body]) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => {
+                  setText(body)
+                  run(body)
+                }}
+                className={chip}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+          {parseError ? <FormAlert>{parseError}</FormAlert> : null}
+          {m.isError ? <FormAlert>{errorText(m.error)}</FormAlert> : null}
+        </>
+      }
+      result={
+        m.data ? (
           m.data.accepted ? (
-            <Code tone="good" label="Accepted · normalised payload">
+            <Code tone="good" label="Accepted: normalised payload">
               {JSON.stringify(m.data.normalized, null, 2)}
             </Code>
           ) : (
-            <div className="border border-accent/40">
-              <p className="border-b border-accent/40 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-accent">
-                Rejected · {m.data.errors.length} problem(s)
+            <div className="overflow-hidden rounded-md border border-danger/40">
+              <p className="border-b border-danger/40 px-3 py-2 text-xs font-medium text-danger">
+                Rejected: {m.data.errors.length} problem(s)
               </p>
               <ul className="divide-y divide-border">
                 {m.data.errors.map((e, i) => (
-                  <li key={i} className="flex gap-3 px-3 py-2 text-sm">
-                    <code className="w-24 shrink-0 font-mono text-xs text-fg">{e.field}</code>
+                  <li key={i} className="flex flex-col gap-0.5 px-3 py-2 text-sm sm:flex-row sm:gap-3">
+                    <code className="shrink-0 font-mono text-xs text-fg sm:w-24">{e.field}</code>
                     <span className="text-muted">{e.message}</span>
                   </li>
                 ))}
               </ul>
             </div>
           )
-        ) : null}
-      </Card>
-    </div>
+        ) : null
+      }
+      defence={
+        <>
+          Every request is checked on the server against a strict Pydantic schema: types are not coerced, unknown
+          fields are rejected and strings are length-limited. Errors never echo the submitted values.
+        </>
+      }
+    />
   )
 }
 
@@ -505,52 +560,58 @@ function AuthorizationLab() {
   }
 
   return (
-    <div className="space-y-6">
-      <Explainer
-        owasp="A01 Broken Access Control"
-        risk={
-          <>
-            Hiding a button is not access control. If the API trusts the client, anyone can call admin endpoints directly,
-            read other users' records by changing an ID (IDOR), or set their own role.
-          </>
-        }
-        fix={
-          <>
-            Every route is deny-by-default and the role is read from the database on each request. Resource queries
-            include the owner's ID, and update schemas only declare fields users may change.
-          </>
-        }
-      />
-      <Card>
-        <ul className="divide-y divide-border">
-          {probes.map((p) => {
-            const r = results[p.id]
-            return (
-              <li key={p.id} className="flex flex-col gap-3 p-5 md:flex-row md:items-center">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-fg">{p.title}</p>
-                  <p className="mt-0.5 break-all font-mono text-[11px] text-subtle">{p.request}</p>
-                  <p className="mt-1.5 text-xs text-muted">{p.expectation}</p>
-                </div>
-                <div className="flex items-center gap-3 md:w-72 md:justify-end">
-                  {r ? (
-                    <span className="text-right">
-                      <Badge tone={r.status === 200 ? 'warn' : 'ok'}>
-                        {r.status} {r.code}
-                      </Badge>
-                      <span className="mt-1 block text-[11px] text-subtle">{r.note}</span>
-                    </span>
-                  ) : null}
-                  <Button variant="outline" size="sm" onClick={() => runProbe(p)} loading={running === p.id}>
-                    {running !== p.id ? <Play /> : null}
-                    Run
-                  </Button>
-                </div>
-              </li>
-            )
-          })}
+    <Lesson
+      owasp="A01 Broken Access Control"
+      shows={
+        <>
+          Hiding a button is not access control. If the API trusts the client, anyone can call admin endpoints, read
+          other users' records by changing an ID, or set their own role.
+        </>
+      }
+      tryIt={
+        <ul className="divide-y divide-border overflow-hidden rounded-md border border-border">
+          {probes.map((p) => (
+            <li key={p.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-fg">{p.title}</p>
+                <p className="mt-0.5 break-all font-mono text-xs text-subtle">{p.request}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => runProbe(p)} loading={running === p.id} className="shrink-0">
+                {running !== p.id ? <Play /> : null}
+                Send
+              </Button>
+            </li>
+          ))}
         </ul>
-      </Card>
-    </div>
+      }
+      result={
+        Object.keys(results).length ? (
+          <ul className="divide-y divide-border overflow-hidden rounded-md border border-border">
+            {probes
+              .filter((p) => results[p.id])
+              .map((p) => {
+                const r = results[p.id]
+                return (
+                  <li key={p.id} className="space-y-1.5 p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={r.status === 200 ? 'warn' : 'ok'} className="normal-case">
+                        {r.status === 200 ? 'Allowed' : 'Blocked'} · {r.status} {r.code}
+                      </Badge>
+                      <span className="text-sm text-fg">{p.title}</span>
+                    </div>
+                    <p className="text-xs text-muted">{r.status === 200 ? r.note : p.expectation}</p>
+                  </li>
+                )
+              })}
+          </ul>
+        ) : null
+      }
+      defence={
+        <>
+          Every route is deny-by-default and the role is read from the database on each request. Resource queries
+          include the owner's ID, and update schemas only declare fields users may change.
+        </>
+      }
+    />
   )
 }

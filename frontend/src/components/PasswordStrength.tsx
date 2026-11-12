@@ -15,13 +15,13 @@ export function PasswordStrength({ password, email, name }: { password: string; 
             <div
               key={i}
               className={cn(
-                'h-1 transition-colors',
-                i <= score ? (score <= 1 ? 'bg-accent' : score === 2 ? 'bg-warn' : 'bg-ok') : 'bg-surface-3',
+                'h-1 rounded-full transition-colors',
+                i <= score ? (score <= 1 ? 'bg-danger' : score === 2 ? 'bg-warn' : 'bg-ok') : 'bg-surface-3',
               )}
             />
           ))}
         </div>
-        <span className="w-20 text-right font-mono text-[11px] text-muted">{password ? LABELS[score] : ''}</span>
+        <span className="w-20 text-right text-xs text-muted">{password ? LABELS[score] : ''}</span>
       </div>
       <ul className="grid gap-1 sm:grid-cols-2">
         {checks.map((c) => (
@@ -31,7 +31,6 @@ export function PasswordStrength({ password, email, name }: { password: string; 
           </li>
         ))}
       </ul>
-      <p className="text-[11px] text-subtle">Tip: a passphrase of several random words is long and memorable.</p>
     </div>
   )
 }

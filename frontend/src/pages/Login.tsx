@@ -52,12 +52,12 @@ export function LoginPage() {
   return (
     <AuthLayout
       eyebrow="Sign in"
-      title="Welcome back"
-      description="Access your security console."
+      title="Sign in"
+      description="Access your security console and the lab."
       footer={
         <>
           New to SecureSphere?{' '}
-          <Link to="/register" className="text-fg underline underline-offset-4 hover:text-accent">
+          <Link to="/register" className="inline-flex min-h-11 items-center text-fg underline underline-offset-4 hover:text-accent">
             Create an account
           </Link>
         </>
@@ -73,7 +73,7 @@ export function LoginPage() {
           {(p) => <PasswordInput {...p} autoComplete="current-password" {...form.register('password')} />}
         </Field>
         <div className="flex justify-end">
-          <Link to="/forgot-password" className="text-xs text-muted underline-offset-4 hover:text-fg hover:underline">
+          <Link to="/forgot-password" className="-my-2 inline-flex min-h-11 items-center text-sm text-muted underline-offset-4 hover:text-fg hover:underline">
             Forgot password?
           </Link>
         </div>

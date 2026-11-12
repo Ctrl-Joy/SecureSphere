@@ -3,7 +3,7 @@ import { useId, useState, type InputHTMLAttributes, type ReactNode, type SelectH
 import { cn } from '@/lib/utils'
 
 const inputBase =
-  'h-10 w-full border border-border-strong bg-surface px-3 text-sm text-fg placeholder:text-subtle transition-colors hover:border-subtle focus-visible:border-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent aria-[invalid=true]:border-accent disabled:opacity-60'
+  'h-11 w-full min-w-0 rounded-md border border-border-strong bg-surface px-3 text-base text-fg placeholder:text-subtle transition-colors hover:border-subtle focus-visible:border-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent aria-[invalid=true]:border-danger disabled:opacity-60 md:h-10 md:text-sm'
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(inputBase, className)} {...props} />
@@ -33,7 +33,7 @@ export function Field({ label, error, hint, children, className }: FieldProps) {
   const describedBy = [error ? errId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label htmlFor={id} className="block font-mono text-xs uppercase tracking-wider text-muted">
+      <label htmlFor={id} className="block text-sm font-medium text-fg">
         {label}
       </label>
       {children({ id, 'aria-invalid': Boolean(error), 'aria-describedby': describedBy })}
@@ -43,7 +43,7 @@ export function Field({ label, error, hint, children, className }: FieldProps) {
         </div>
       ) : null}
       {error ? (
-        <p id={errId} role="alert" className="text-xs text-accent">
+        <p id={errId} role="alert" className="text-sm text-danger md:text-xs">
           {error}
         </p>
       ) : null}
@@ -55,11 +55,11 @@ export function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
   const [visible, setVisible] = useState(false)
   return (
     <div className="relative">
-      <Input {...props} type={visible ? 'text' : 'password'} className="pr-11" />
+      <Input {...props} type={visible ? 'text' : 'password'} className="pr-12" />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-subtle hover:text-fg"
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-md text-subtle hover:text-fg"
         aria-label={visible ? 'Hide password' : 'Show password'}
         aria-pressed={visible}
       >
@@ -74,8 +74,8 @@ export function FormAlert({ children, tone = 'error' }: { children: ReactNode; t
     <div
       role={tone === 'error' ? 'alert' : 'status'}
       className={cn(
-        'border px-3 py-2.5 text-sm',
-        tone === 'error' && 'border-accent/40 bg-accent-soft text-fg',
+        'rounded-md border px-3 py-2.5 text-sm',
+        tone === 'error' && 'border-danger/40 bg-danger-soft text-fg',
         tone === 'success' && 'border-ok/40 bg-ok/10 text-fg',
         tone === 'info' && 'border-border-strong bg-surface-2 text-muted',
       )}

@@ -5,7 +5,7 @@ import type { Severity } from '@/lib/types'
 import { Button } from './button'
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('border border-border bg-surface', className)} {...props} />
+  return <div className={cn('rounded-lg border border-border bg-surface', className)} {...props} />
 }
 
 export function CardHeader({
@@ -20,7 +20,7 @@ export function CardHeader({
   className?: string
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-4 border-b border-border px-5 py-4', className)}>
+    <div className={cn('flex items-start justify-between gap-4 border-b border-border px-4 py-4 sm:px-5', className)}>
       <div className="min-w-0">
         <h2 className="text-[15px] font-medium text-fg">{title}</h2>
         {description ? <p className="mt-0.5 text-sm text-muted">{description}</p> : null}
@@ -32,7 +32,8 @@ export function CardHeader({
 
 const badgeTones = {
   neutral: 'border-border-strong text-muted',
-  accent: 'border-accent/50 text-accent bg-accent-soft',
+  accent: 'border-accent/40 text-accent bg-accent-soft',
+  danger: 'border-danger/40 text-danger bg-danger-soft',
   ok: 'border-ok/40 text-ok bg-ok/10',
   warn: 'border-warn/40 text-warn bg-warn/10',
   info: 'border-info/40 text-info bg-info/10',
@@ -50,7 +51,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 whitespace-nowrap border px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wide',
+        'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded border px-1.5 py-0.5 text-xs font-medium capitalize',
         badgeTones[tone],
         className,
       )}
@@ -64,20 +65,20 @@ const severityTone: Record<Severity, keyof typeof badgeTones> = {
   info: 'neutral',
   low: 'info',
   medium: 'warn',
-  high: 'accent',
+  high: 'danger',
 }
 
 export function SeverityBadge({ severity }: { severity: Severity }) {
   return (
     <Badge tone={severityTone[severity]}>
-      <span aria-hidden className="size-1.5 bg-current" />
+      <span aria-hidden className="size-1.5 rounded-full bg-current" />
       {severity}
     </Badge>
   )
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cn('animate-pulse bg-surface-3', className)} />
+  return <div aria-hidden className={cn('animate-pulse rounded bg-surface-3', className)} />
 }
 
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
@@ -95,7 +96,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   const message = error instanceof Error ? error.message : 'Something went wrong.'
   return (
     <div role="alert" className="flex flex-col items-center justify-center px-6 py-12 text-center">
-      <AlertTriangle className="mb-3 size-6 text-accent" aria-hidden />
+      <AlertTriangle className="mb-3 size-6 text-danger" aria-hidden />
       <p className="text-sm font-medium text-fg">Could not load this data</p>
       <p className="mt-1 max-w-sm text-sm text-muted">{message}</p>
       {onRetry ? (
@@ -123,14 +124,14 @@ export function Pagination({
   const to = Math.min(total, page * pageSize)
   return (
     <nav aria-label="Pagination" className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
-      <p className="font-mono text-xs text-subtle">
+      <p className="text-xs tabular-nums text-muted">
         {from}–{to} of {total}
       </p>
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon" aria-label="Previous page" disabled={page <= 1} onClick={() => onPage(page - 1)}>
           <ChevronLeft />
         </Button>
-        <span className="px-2 font-mono text-xs text-muted">
+        <span className="px-2 text-xs tabular-nums text-muted">
           {page} / {pages}
         </span>
         <Button variant="ghost" size="icon" aria-label="Next page" disabled={page >= pages} onClick={() => onPage(page + 1)}>
@@ -145,11 +146,11 @@ export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?:
   return (
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        {eyebrow ? <p className="mb-1.5 font-mono text-xs uppercase tracking-[0.18em] text-accent">{eyebrow}</p> : null}
-        <h1 className="text-2xl font-medium tracking-tight text-fg sm:text-[28px]">{title}</h1>
+        {eyebrow ? <p className="mb-1 text-sm text-accent">{eyebrow}</p> : null}
+        <h1 className="text-2xl font-medium tracking-tight text-fg">{title}</h1>
         {description ? <p className="mt-1 max-w-2xl text-sm text-muted">{description}</p> : null}
       </div>
-      {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 gap-2 max-sm:[&>*]:flex-1">{actions}</div> : null}
     </header>
   )
 }

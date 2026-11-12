@@ -19,10 +19,10 @@ export function DialogContent({
 }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[2px]" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60" />
       <DialogPrimitive.Content
         className={cn(
-          'fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto border border-border-strong bg-surface p-6 shadow-2xl',
+          'fixed inset-x-0 bottom-0 z-50 max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-xl border border-border-strong bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[calc(100vw-2rem)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:p-6',
           className,
         )}
       >
@@ -35,7 +35,7 @@ export function DialogContent({
               <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
             )}
           </div>
-          <DialogPrimitive.Close className="text-subtle hover:text-fg" aria-label="Close">
+          <DialogPrimitive.Close className="-mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-md text-subtle hover:text-fg" aria-label="Close">
             <X className="size-4" />
           </DialogPrimitive.Close>
         </div>
@@ -67,7 +67,7 @@ export function ConfirmDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title={title} description={description}>
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>

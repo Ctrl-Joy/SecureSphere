@@ -65,12 +65,12 @@ export function UsersPage() {
     <>
       <PageHeader
         eyebrow="Administration"
-        title="User management"
-        description="Change roles and account status. Every change revokes the user's sessions and is written to the audit log."
+        title="Users"
+        description="Role and status changes sign the user out and are written to the audit log."
       />
       <Card>
-        <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center">
-          <div className="relative flex-1">
+        <div className="grid grid-cols-2 gap-3 border-b border-border p-4 md:flex md:items-center">
+          <div className="relative col-span-2 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-subtle" aria-hidden />
             <Input
               value={q}
@@ -105,9 +105,31 @@ export function UsersPage() {
           <EmptyState title="No users match these filters" description="Try a different search term or clear the filters." />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <ul className={`divide-y divide-border md:hidden ${users.isFetching ? 'opacity-70' : ''}`}>
+              {users.data.items.map((u) => {
+                const self = u.id === me?.id
+                return (
+                  <li key={u.id} className="flex items-center gap-2 py-2 pl-4 pr-2">
+                    <button className="min-w-0 flex-1 py-1 text-left" onClick={() => setDetail(u)}>
+                      <span className="block truncate text-sm text-fg">
+                        {u.name}
+                        {self ? <span className="ml-2 text-xs text-subtle">(you)</span> : null}
+                      </span>
+                      <span className="block truncate text-xs text-subtle">{u.email}</span>
+                      <span className="mt-1.5 flex flex-wrap gap-1.5">
+                        <Badge tone={u.role === 'admin' ? 'accent' : 'neutral'}>{u.role}</Badge>
+                        <Badge tone={u.status === 'active' ? 'ok' : 'warn'}>{u.status}</Badge>
+                        {isLocked(u) ? <Badge tone="danger">locked</Badge> : null}
+                      </span>
+                    </button>
+                    <RowMenu user={u} self={self} onAction={setAction} onView={() => setDetail(u)} />
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="border-b border-border font-mono text-[11px] uppercase tracking-wider text-subtle">
+                <thead className="border-b border-border text-xs text-muted">
                   <tr>
                     <th className="px-5 py-2.5 font-normal">User</th>
                     <th className="px-5 py-2.5 font-normal">Role</th>
@@ -128,9 +150,9 @@ export function UsersPage() {
                           <button className="text-left" onClick={() => setDetail(u)}>
                             <span className="block text-fg hover:underline">
                               {u.name}
-                              {self ? <span className="ml-2 font-mono text-[11px] text-subtle">(you)</span> : null}
+                              {self ? <span className="ml-2 text-xs text-subtle">(you)</span> : null}
                             </span>
-                            <span className="block font-mono text-xs text-subtle">{u.email}</span>
+                            <span className="block text-xs text-subtle">{u.email}</span>
                           </button>
                         </td>
                         <td className="px-5 py-3">
@@ -139,11 +161,11 @@ export function UsersPage() {
                         <td className="px-5 py-3">
                           <div className="flex flex-wrap gap-1.5">
                             <Badge tone={u.status === 'active' ? 'ok' : 'warn'}>{u.status}</Badge>
-                            {isLocked(u) ? <Badge tone="accent">locked</Badge> : null}
+                            {isLocked(u) ? <Badge tone="danger">locked</Badge> : null}
                           </div>
                         </td>
-                        <td className="px-5 py-3 font-mono text-xs text-muted">{u.active_sessions}</td>
-                        <td className="px-5 py-3 font-mono text-xs text-muted" title={formatDateTime(u.last_login_at)}>
+                        <td className="px-5 py-3 text-xs tabular-nums text-muted">{u.active_sessions}</td>
+                        <td className="px-5 py-3 text-xs text-muted" title={formatDateTime(u.last_login_at)}>
                           {timeAgo(u.last_login_at)}
                         </td>
                         <td className="px-5 py-3 text-right">
@@ -163,7 +185,7 @@ export function UsersPage() {
       <Dialog open={detail !== null} onOpenChange={(o) => !o && setDetail(null)}>
         {detail ? (
           <DialogContent title={detail.name} description={detail.email}>
-            <dl className="grid grid-cols-2 gap-px border border-border bg-border text-sm">
+            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border text-sm">
               {[
                 ['Role', detail.role],
                 ['Status', detail.status],
@@ -175,8 +197,8 @@ export function UsersPage() {
                 ['Created', formatDateTime(detail.created_at)],
               ].map(([k, v]) => (
                 <div key={k} className="bg-surface px-3 py-2.5">
-                  <dt className="font-mono text-[11px] uppercase tracking-wider text-subtle">{k}</dt>
-                  <dd className="mt-0.5 text-fg">{v}</dd>
+                  <dt className="text-xs text-muted">{k}</dt>
+                  <dd className="mt-0.5 break-words capitalize text-fg">{v}</dd>
                 </div>
               ))}
             </dl>
@@ -210,7 +232,8 @@ function RowMenu({
   onAction: (a: Action) => void
   onView: () => void
 }) {
-  const item = 'block w-full px-3 py-2 text-left text-sm outline-none data-[highlighted]:bg-surface-2 data-[disabled]:opacity-40'
+  const item =
+    'flex min-h-11 w-full cursor-pointer items-center rounded-md px-3 text-left text-sm outline-none data-[highlighted]:bg-surface-2 data-[disabled]:opacity-40 md:min-h-9'
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -219,7 +242,7 @@ function RowMenu({
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" sideOffset={4} className="z-50 w-52 border border-border-strong bg-surface p-1 shadow-2xl">
+        <DropdownMenu.Content align="end" sideOffset={4} className="z-50 w-56 rounded-lg border border-border-strong bg-surface p-1.5 shadow-2xl">
           <DropdownMenu.Item className={item} onSelect={onView}>
             View details
           </DropdownMenu.Item>
@@ -243,7 +266,7 @@ function RowMenu({
               Unlock sign-in
             </DropdownMenu.Item>
           ) : null}
-          {self ? <p className="px-3 py-2 text-[11px] text-subtle">You cannot change your own role or status.</p> : null}
+          {self ? <p className="px-3 py-2 text-xs text-subtle">You cannot change your own role or status.</p> : null}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

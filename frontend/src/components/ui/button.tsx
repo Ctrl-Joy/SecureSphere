@@ -5,22 +5,22 @@ import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap font-sans text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-sans text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        primary: 'bg-accent text-accent-fg hover:bg-accent-hover',
+        primary: 'bg-fg text-bg hover:bg-fg/85',
         secondary: 'border border-border-strong bg-surface-2 text-fg hover:bg-surface-3',
         outline: 'border border-border-strong text-fg hover:bg-surface-2',
         ghost: 'text-muted hover:bg-surface-2 hover:text-fg',
-        danger: 'border border-accent/50 bg-accent-soft text-accent hover:bg-accent hover:text-accent-fg',
+        danger: 'border border-danger/40 bg-danger-soft text-danger hover:border-danger',
         link: 'text-fg underline-offset-4 hover:underline',
       },
       size: {
-        sm: 'h-8 px-3 text-xs',
-        md: 'h-10 px-4',
+        sm: 'h-11 px-3.5 md:h-8 md:px-3 md:text-xs',
+        md: 'h-11 px-4 md:h-10',
         lg: 'h-12 px-5 text-[15px]',
-        icon: 'size-9',
+        icon: 'size-11 md:size-9',
       },
     },
     defaultVariants: { variant: 'primary', size: 'md' },

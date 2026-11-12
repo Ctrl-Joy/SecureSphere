@@ -9,7 +9,7 @@ Everything in the core flows is real. There are no mocked responses or fake succ
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, Radix UI primitives, TanStack Query, React Hook Form + Zod, Recharts |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, Radix UI primitives, TanStack Query, React Hook Form + Zod |
 | Backend | Python 3.12, FastAPI, Pydantic 2, SQLAlchemy 2, Alembic, Argon2id (argon2-cffi) |
 | Data | PostgreSQL 16 (production / Docker); SQLite for zero-setup local development and tests |
 | Ops | Docker Compose, nginx (unprivileged), GitHub Actions CI, Ruff, Bandit, pip-audit, npm audit |
@@ -39,8 +39,9 @@ Further documents: [Threat model](docs/THREAT_MODEL.md) · [Security policy](SEC
 
 **Every signed-in user:**
 - **Dashboard:** real metrics, a 14-day security-event chart, a live account checklist and recent activity.
+- **Phone ready:** every screen has a phone layout (bottom tab bar, list views instead of wide tables, bottom-sheet dialogs).
 - **Account settings:** edit profile, change password (rotates every session), list and revoke sessions, view personal security activity.
-- **Security lab:** SQL injection, XSS, password hashing, input validation and authorization demos running against the real API.
+- **Security lab:** five guided lessons (SQL injection, XSS, password hashing, input validation, authorization), each laid out as what it shows, try it, what happened, how it is defended. They run against the real API; vulnerable code is only displayed, never executed.
 
 **Administrators:**
 - **User management:** search, filter and paginate users; promote or demote; suspend or reactivate; unlock. Every change goes through a confirmation dialog and is audited.
@@ -143,7 +144,7 @@ backend/
     models/  schemas/       SQLAlchemy models; Pydantic request/response contracts
     middleware/             request context, body limit, security headers
   alembic/versions/         versioned migrations
-  tests/                    67 pytest tests
+  tests/                    79 pytest tests
 frontend/
   src/lib/                  typed API client, auth context, validation, utilities
   src/components/           design system (ui/), layout, brand (logo, canvas visual)
@@ -207,6 +208,7 @@ All endpoints live under `/api/v1` and return JSON. Errors use one envelope:
 | Method & path | Auth | Purpose |
 |---|---|---|
 | `GET /health/live`, `GET /health/ready` | none | liveness; readiness (database check) |
+| `GET /health/features` | none | whether this deployment can send password-reset email |
 | `GET /auth/csrf` | none | obtain CSRF token |
 | `POST /auth/register` | none · 5/h/IP | create account (generic 202 response) |
 | `POST /auth/login` | none · 20/5 min/IP, 10/15 min/email | sign in, sets cookie |
@@ -253,7 +255,7 @@ Frontend: `VITE_API_BASE_URL` (default `/api/v1`).
 
 ```bash
 cd backend
-uv run pytest                     # 67 tests
+uv run pytest                     # 79 tests
 uv run ruff check . && uv run ruff format --check .
 uv run bandit -q -r app -c pyproject.toml
 uv run pip-audit

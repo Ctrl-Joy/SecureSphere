@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth'
 
 export function FullPageSpinner() {
   return (
-    <div className="flex min-h-[50dvh] items-center justify-center" role="status" aria-label="Loading">
+    <div className="flex min-h-[60dvh] items-center justify-center" role="status" aria-label="Loading">
       <Loader2 className="size-5 animate-spin text-accent" />
     </div>
   )
@@ -30,7 +30,7 @@ export function RequireAdmin({ children }: { children: ReactNode }) {
   if (user?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-24 text-center">
-        <ShieldOff className="size-7 text-accent" aria-hidden />
+        <ShieldOff className="size-7 text-danger" aria-hidden />
         <h1 className="mt-4 text-xl font-medium">Administrator access required</h1>
         <p className="mt-2 max-w-md text-sm text-muted">
           Your account does not have permission to view this page. The server also rejects these requests, and the

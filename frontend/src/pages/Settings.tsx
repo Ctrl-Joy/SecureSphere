@@ -36,12 +36,12 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Account" title="Profile & security" description="Manage your details, password and signed-in devices." />
-      <div className="grid gap-6 xl:grid-cols-2">
+      <PageHeader eyebrow="Account" title="Profile and security" description="Your details, password and signed-in devices." />
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
         <ProfileCard />
         <PasswordCard />
       </div>
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-6">
         <SessionsCard />
         <ActivityCard />
       </div>
@@ -74,7 +74,7 @@ function ProfileCard() {
       <CardHeader title="Profile" description="Your email address is your sign-in identifier and cannot be changed here." />
       <form
         noValidate
-        className="space-y-5 p-5"
+        className="space-y-5 p-4 sm:p-5"
         onSubmit={form.handleSubmit((v) => {
           setError(null)
           mutation.mutate(v.name)
@@ -85,9 +85,9 @@ function ProfileCard() {
           {(p) => <Input {...p} autoComplete="name" {...form.register('name')} />}
         </Field>
         <Field label="Email">{(p) => <Input {...p} value={user?.email ?? ''} disabled readOnly />}</Field>
-        <div className="flex items-center justify-between gap-3">
-          <p className="font-mono text-[11px] text-subtle">
-            Role: <span className="text-fg">{user?.role}</span> · Member since {formatDateTime(user?.created_at)}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-subtle">
+            <span className="capitalize text-fg">{user?.role}</span> · Member since {formatDateTime(user?.created_at)}
           </p>
           <Button type="submit" loading={mutation.isPending} disabled={!form.formState.isDirty}>
             Save changes
@@ -136,7 +136,7 @@ function PasswordCard() {
       <CardHeader title="Change password" description="Changing your password signs out every other device." />
       <form
         noValidate
-        className="space-y-5 p-5"
+        className="space-y-5 p-4 sm:p-5"
         onSubmit={form.handleSubmit(({ current_password, new_password }) => {
           setError(null)
           mutation.mutate({ current_password, new_password })
@@ -156,7 +156,7 @@ function PasswordCard() {
         <Field label="Confirm new password" error={form.formState.errors.confirm?.message}>
           {(p) => <PasswordInput {...p} autoComplete="new-password" {...form.register('confirm')} />}
         </Field>
-        <div className="flex justify-end">
+        <div className="flex justify-end max-sm:[&>*]:w-full">
           <Button type="submit" loading={mutation.isPending}>
             Update password
           </Button>
@@ -199,9 +199,9 @@ function SessionsCard() {
     <Card id="sessions" className="scroll-mt-6">
       <CardHeader
         title="Active sessions"
-        description="Devices currently signed in to your account. IP addresses are truncated for privacy."
+        description="Devices signed in to your account."
         action={
-          <Button variant="danger" size="sm" disabled={!others} onClick={() => setTarget('others')}>
+          <Button variant="danger" size="sm" className="shrink-0" disabled={!others} onClick={() => setTarget('others')}>
             <LogOut />
             Sign out others
           </Button>
@@ -217,16 +217,15 @@ function SessionsCard() {
       ) : (
         <ul className="divide-y divide-border">
           {sessions.data.map((s) => (
-            <li key={s.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
+            <li key={s.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
               <Monitor className="hidden size-5 text-subtle sm:block" aria-hidden />
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 text-sm text-fg">
+                <p className="flex flex-wrap items-center gap-2 text-sm text-fg">
                   {describeUserAgent(s.user_agent)}
                   {s.current ? <Badge tone="ok">This device</Badge> : null}
                 </p>
-                <p className="mt-0.5 font-mono text-[11px] text-subtle">
-                  {s.ip_prefix ?? 'unknown network'} · signed in {timeAgo(s.created_at)} · active {timeAgo(s.last_seen_at)} ·
-                  expires {formatDateTime(s.expires_at)}
+                <p className="mt-0.5 text-xs text-subtle">
+                  {s.ip_prefix ?? 'Unknown network'} · active {timeAgo(s.last_seen_at)} · expires {formatDateTime(s.expires_at)}
                 </p>
               </div>
               {!s.current ? (
@@ -265,7 +264,7 @@ function ActivityCard() {
   })
   return (
     <Card id="activity" className="scroll-mt-6">
-      <CardHeader title="Recent security activity" description="Sign-ins, password changes and other events on your account." />
+      <CardHeader title="Security activity" description="Sign-ins, password changes and other events on your account." />
       {q.isPending ? (
         <div className="space-y-3 p-5">
           {Array.from({ length: 5 }, (_, i) => (
@@ -278,9 +277,23 @@ function ActivityCard() {
         <EmptyState title="No activity recorded yet" />
       ) : (
         <>
-          <div className="overflow-x-auto">
+          <ul className="divide-y divide-border md:hidden">
+            {q.data.items.map((e) => (
+              <li key={e.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-fg">{eventLabel(e.event_type)}</p>
+                  <p className="truncate text-xs text-subtle">
+                    {timeAgo(e.created_at)} · {e.outcome}
+                    {e.ip_prefix ? ` · ${e.ip_prefix}` : ''}
+                  </p>
+                </div>
+                <SeverityBadge severity={e.severity} />
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[560px] text-left text-sm">
-              <thead className="border-b border-border font-mono text-[11px] uppercase tracking-wider text-subtle">
+              <thead className="border-b border-border text-xs text-muted">
                 <tr>
                   <th className="px-5 py-2.5 font-normal">Event</th>
                   <th className="px-5 py-2.5 font-normal">Severity</th>
@@ -296,7 +309,7 @@ function ActivityCard() {
                     <td className="px-5 py-3">
                       <SeverityBadge severity={e.severity} />
                     </td>
-                    <td className="px-5 py-3 font-mono text-xs text-muted">{e.outcome}</td>
+                    <td className="px-5 py-3 text-xs capitalize text-muted">{e.outcome}</td>
                     <td className="px-5 py-3 font-mono text-xs text-muted">{e.ip_prefix ?? '—'}</td>
                     <td className="px-5 py-3 font-mono text-xs text-muted" title={formatDateTime(e.created_at)}>
                       {timeAgo(e.created_at)}

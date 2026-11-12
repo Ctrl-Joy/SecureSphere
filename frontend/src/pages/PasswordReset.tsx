@@ -7,7 +7,7 @@ import { AuthLayout } from '@/components/layout/AuthLayout'
 import { PasswordStrength } from '@/components/PasswordStrength'
 import { Button } from '@/components/ui/button'
 import { Field, FormAlert, Input, PasswordInput } from '@/components/ui/form'
-import { ApiError, post } from '@/lib/api'
+import { ApiError, get, post } from '@/lib/api'
 import type { Message } from '@/lib/types'
 import { applyServerErrors, emailSchema, newPasswordSchema } from '@/lib/validation'
 
@@ -16,6 +16,13 @@ const requestSchema = z.object({ email: emailSchema })
 export function ForgotPasswordPage() {
   const [sent, setSent] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // false only when the server says it has no mail provider; unknown counts as "can send".
+  const [canEmail, setCanEmail] = useState(true)
+  useEffect(() => {
+    get<{ password_reset_email: boolean }>('/health/features')
+      .then((f) => setCanEmail(f.password_reset_email))
+      .catch(() => undefined)
+  }, [])
   const form = useForm<z.infer<typeof requestSchema>>({ resolver: zodResolver(requestSchema), defaultValues: { email: '' } })
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -34,7 +41,7 @@ export function ForgotPasswordPage() {
       title="Reset your password"
       description="Enter your email and we will send a single-use link that expires in 30 minutes."
       footer={
-        <Link to="/login" className="text-fg underline underline-offset-4 hover:text-accent">
+        <Link to="/login" className="inline-flex min-h-11 items-center text-fg underline underline-offset-4 hover:text-accent">
           Back to sign in
         </Link>
       }
@@ -52,10 +59,16 @@ export function ForgotPasswordPage() {
       ) : (
         <form onSubmit={onSubmit} noValidate className="space-y-5">
           {error ? <FormAlert>{error}</FormAlert> : null}
+          {!canEmail ? (
+            <FormAlert tone="info">
+              This deployment has no email provider configured, so reset links cannot be delivered yet. Ask the
+              administrator to reset your access.
+            </FormAlert>
+          ) : null}
           <Field label="Email" error={form.formState.errors.email?.message}>
             {(p) => <Input {...p} type="email" autoComplete="email" autoFocus {...form.register('email')} />}
           </Field>
-          <Button type="submit" size="lg" className="w-full" loading={form.formState.isSubmitting}>
+          <Button type="submit" size="lg" className="w-full" loading={form.formState.isSubmitting} disabled={!canEmail}>
             Send reset link
           </Button>
         </form>
@@ -99,7 +112,7 @@ export function ResetPasswordPage() {
       title="Choose a new password"
       description="All existing sessions will be signed out after the change."
       footer={
-        <Link to="/forgot-password" className="text-fg underline underline-offset-4 hover:text-accent">
+        <Link to="/forgot-password" className="inline-flex min-h-11 items-center text-fg underline underline-offset-4 hover:text-accent">
           Request a new link
         </Link>
       }
