@@ -47,8 +47,9 @@
   color-scheme: light;
 }
 
-/* The home page keeps the original SecureSphere brand look: black, signal red, square
-   corners and the animated data-stream canvas. Scoped so the console is unaffected. */
+/* The SecureSphere brand look: black, signal red and square corners. The class sits on
+   <html>, so every screen, dialog and menu uses it. Red marks both the brand and high
+   severity; amber, blue and green keep their status meanings. */
 .classic {
   --bg: #050505;
   --surface: #0b0b0c;
@@ -64,9 +65,12 @@
   --accent-fg: #ffffff;
   --accent-soft: rgb(227 38 28 / 0.12);
   --focus: #ff5a4f;
+  --danger: #f23a2f;
+  --danger-soft: rgb(227 38 28 / 0.12);
   color: var(--text);
 }
 
+[data-theme='light'].classic,
 [data-theme='light'] .classic {
   --bg: #fafaf9;
   --surface: #ffffff;
@@ -81,6 +85,8 @@
   --accent-hover: #a9140c;
   --accent-soft: rgb(200 24 15 / 0.08);
   --focus: #c8180f;
+  --danger: #c8180f;
+  --danger-soft: rgb(200 24 15 / 0.08);
 }
 
 .classic *,

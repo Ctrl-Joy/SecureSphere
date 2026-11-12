@@ -29,7 +29,7 @@ export function App() {
             position="top-center"
             toastOptions={{
               classNames: {
-                toast: '!rounded-lg !border !border-border-strong !bg-surface !text-fg !font-sans',
+                toast: '!rounded-none !border !border-border-strong !bg-surface !text-fg !font-sans',
                 description: '!text-muted',
               },
             }}

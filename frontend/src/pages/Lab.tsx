@@ -38,7 +38,7 @@ export function LabPage() {
             className={cn(
               'flex h-11 items-center gap-2 rounded-full border px-4 text-sm transition-colors md:h-9',
               tab === t.id
-                ? 'border-fg bg-fg font-medium text-bg'
+                ? 'border-accent bg-accent font-medium text-accent-fg'
                 : 'border-border-strong text-muted hover:border-subtle hover:text-fg',
             )}
           >

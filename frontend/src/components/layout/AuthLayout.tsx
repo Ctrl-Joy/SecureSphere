@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { DataStream } from '@/components/brand/DataStream'
 import { Logo } from '@/components/brand/Logo'
 
 export function AuthLayout({
@@ -16,7 +17,8 @@ export function AuthLayout({
   footer?: ReactNode
 }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-bg px-4 py-5 sm:px-8">
+    <div className="grid min-h-dvh bg-bg lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+    <div className="flex min-h-dvh flex-col px-4 py-5 sm:px-8">
       <Link to="/" className="flex h-11 w-fit items-center" aria-label="SecureSphere home">
         <Logo />
       </Link>
@@ -29,6 +31,15 @@ export function AuthLayout({
       <p className="mx-auto max-w-[400px] text-center text-xs text-subtle">
         Sessions use HttpOnly cookies. Nothing sensitive is stored in your browser.
       </p>
+    </div>
+      <aside className="relative hidden overflow-hidden border-l border-border lg:block" aria-hidden>
+        <DataStream className="absolute inset-0" />
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg via-bg/80 to-transparent p-12 pt-32">
+          <p className="max-w-md text-2xl font-medium leading-snug">
+            Every sign-in is rate limited, hashed with Argon2id and written to an audit trail.
+          </p>
+        </div>
+      </aside>
     </div>
   )
 }
