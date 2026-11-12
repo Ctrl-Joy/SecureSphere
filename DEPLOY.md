@@ -86,7 +86,7 @@ Brevo, Resend or SendGrid), then in **securesphere → Environment** set:
 |---|---|
 | `SS_MAIL_BACKEND` | `smtp` |
 | `SS_SMTP_HOST` | your provider's SMTP host, e.g. `smtp-relay.brevo.com` |
-| `SS_SMTP_PORT` | `587` |
+| `SS_SMTP_PORT` | `2525` on Render's free plan, which blocks outbound ports 25, 465 and 587 (the connection times out). Brevo accepts 2525. Use `587` on paid plans or other hosts. |
 | `SS_SMTP_USERNAME` | from your provider |
 | `SS_SMTP_PASSWORD` | from your provider (an SMTP key, not your account password) |
 | `SS_MAIL_FROM` | a sender address your provider has verified, e.g. `SecureSphere <you@gmail.com>` |
