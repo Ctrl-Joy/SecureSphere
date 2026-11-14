@@ -30,6 +30,9 @@ def mount_spa(app: FastAPI, static_dir: str) -> None:
             # Containment check blocks ../ traversal out of the build directory.
             if candidate.is_relative_to(root) and candidate.is_file():
                 headers = _IMMUTABLE if path.startswith("assets/") else _REVALIDATE
+                if path == "og-image.png":
+                    # Link-preview card: public, embedded by other sites' preview renderers.
+                    headers = {**headers, "Cross-Origin-Resource-Policy": "cross-origin"}
                 return FileResponse(candidate, headers=headers)
         # Client-side routes (/dashboard, /settings, ...) all load the app shell.
         return FileResponse(index, headers=_REVALIDATE)
