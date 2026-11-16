@@ -12,6 +12,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 _IMMUTABLE = {"Cache-Control": "public, max-age=31536000, immutable"}
 _REVALIDATE = {"Cache-Control": "no-cache"}
+# Crawler files: explicit types, so they never depend on the host's MIME database.
+_CRAWLER_TYPES = {"robots.txt": "text/plain; charset=utf-8", "sitemap.xml": "application/xml"}
 
 
 def mount_spa(app: FastAPI, static_dir: str) -> None:
@@ -33,6 +35,6 @@ def mount_spa(app: FastAPI, static_dir: str) -> None:
                 if path == "og-image.png":
                     # Link-preview card: public, embedded by other sites' preview renderers.
                     headers = {**headers, "Cross-Origin-Resource-Policy": "cross-origin"}
-                return FileResponse(candidate, headers=headers)
+                return FileResponse(candidate, headers=headers, media_type=_CRAWLER_TYPES.get(path))
         # Client-side routes (/dashboard, /settings, ...) all load the app shell.
         return FileResponse(index, headers=_REVALIDATE)

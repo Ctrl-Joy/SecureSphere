@@ -26,6 +26,8 @@ def spa_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Test
     (dist / "index.html").write_text("<!doctype html><title>SecureSphere</title>")
     (dist / "assets" / "app-123.js").write_text("console.log('app')")
     (dist / "theme-init.js").write_text("// theme")
+    (dist / "robots.txt").write_text("User-agent: *\nAllow: /\n")
+    (dist / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?><urlset/>')
     (tmp_path / "secret.txt").write_text("outside the build dir")
     monkeypatch.setenv("SS_STATIC_DIR", str(dist))
     get_settings.cache_clear()
@@ -57,6 +59,17 @@ class TestSpaServing:
         assert res.status_code == 200
         assert "immutable" in res.headers["cache-control"]
         assert spa_client.get("/theme-init.js").text == "// theme"
+
+    def test_robots_and_sitemap_are_served_with_crawler_types(self, spa_client: TestClient) -> None:
+        robots = spa_client.get("/robots.txt")
+        assert robots.status_code == 200
+        assert robots.headers["content-type"].startswith("text/plain")
+        assert robots.text.startswith("User-agent: *")
+        sitemap = spa_client.get("/sitemap.xml")
+        assert sitemap.status_code == 200
+        assert sitemap.headers["content-type"] == "application/xml"
+        assert "<urlset" in sitemap.text
+        assert "x-robots-tag" not in spa_client.get("/").headers
 
     def test_path_traversal_cannot_escape_build_dir(self, spa_client: TestClient) -> None:
         for path in ("/..%2fsecret.txt", "/assets/..%2f..%2fsecret.txt", "/%2e%2e/secret.txt"):
